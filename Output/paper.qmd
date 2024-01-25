@@ -28,7 +28,7 @@ library(kableExtra)
 
 # Introduction
 
-Toronto, Canada's largest city, hosts a population exceeding three million. Renowned for its robust economic landscape and cultural diversity, the city has concurrently experienced notable challenges in managing urban crime. In 2022, Toronto recorded a significant 15 percent increase in its crime rate, surpassing the national urban average by more than threefold \[\@citeCP24\]. 
+Toronto, Canada's largest city, hosts a population exceeding three million. Renowned for its robust economic landscape and cultural diversity, the city has concurrently experienced notable challenges in managing urban crime. In 2022, Toronto recorded a significant 15 percent increase in its crime rate, surpassing the national urban average by more than threefold [@citeCP24]. 
 
 This paper employs the Neighbourhood Crime Rates dataset, encompassing a period from 2014 to 2023, to analyze the trend of crime in Toronto. The dataset provides detailed information on various crime categories, such as theft, shooting, and assault. Through statistical analysis, including the generation of descriptive tables and graphical representations, this study aims to elaborate the temporal patterns and fluctuations in crime rates.
 
