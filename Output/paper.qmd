@@ -1,0 +1,302 @@
+---
+title: "Investigating the change of Toronto crime rates from 2014-2023"
+author: "Charles Cai"
+thanks: "Code and data are available at: https://github.com/peachvegetable/STA_302_neighbourhood_crime-rate" 
+date: "today"
+date-format: "long" 
+abstract: "This study presents an analysis of crime rates in the Wexford/Maryvale and Kensington-Chinatown neighborhoods over a ten-year period, revealing a notable increase in crime rates, especially in Kensington-Chinatown. The findings suggest that local socio-economic factors may significantly influence crime trends."
+format: pdf
+output: bookdown::pdf_document2
+toc: true
+number-sections: true
+bibliography: reference.bib
+---
+
+```{r}
+#| message: false
+#| echo: false
+
+# load packages
+library(tidyverse)
+library(knitr)
+library(ggplot2)
+library(dplyr)
+library(kableExtra)
+```
+
+\newpage
+
+# Introduction
+
+Toronto, Canada's largest city, hosts a population exceeding three million. Renowned for its robust economic landscape and cultural diversity, the city has concurrently experienced notable challenges in managing urban crime. In 2022, Toronto recorded a significant 15 percent increase in its crime rate, surpassing the national urban average by more than threefold \[\@citeCP24\]. 
+
+This paper employs the Neighbourhood Crime Rates dataset, encompassing a period from 2014 to 2023, to analyze the trend of crime in Toronto. The dataset provides detailed information on various crime categories, such as theft, shooting, and assault. Through statistical analysis, including the generation of descriptive tables and graphical representations, this study aims to elaborate the temporal patterns and fluctuations in crime rates.
+
+Section 2 introduces the neighbourhood crime rates dataset obtained from OpenDataToronto. The dataset is cleaned and only a part of the crime types are chosen to be analyzed. In section 2.1, I choose a location to do the analysis, and modify the data frame into a table which is easier to plot the graphs in the coding aspect. Section 2.2 introduces another location to do the comparison with the previous location, and a similar method is applied to the data. Lastly, section 3, the discussion part concludes the overall idea of this paper and point out what could be done to further to investigte in this dataset.
+
+# Data
+
+To examine the trends of crime in Toronto, I have sourced the "Neighbourhood Crime Rates" dataset from the Toronto Open Data Portal [@citeOpendataToronto]. This dataset, published by the City of Toronto, details crime statistics across various neighborhoods from 2014 to 2023. It has different crime types, including but not limited to assault, shooting, and theft, and presents these data points in the context of annual crime rates per 100,000 population.
+
+Given the dataset's extensive scope, encompassing 158 neighborhoods, a selection approach was necessary to manage the breadth of the analysis. Therefore, a subset of locations was chosen to be analyzed. The dataset consists of 185 variables (columns) and 158 locations. For the purposes of this paper, the focus will be narrowed to the rate of six common crimes (i.e. assault, break enter, homicide, robbery, shooting and bike theft) spanned from 2014 to 2023 (not crime counts) and Hood_id. In particular, the analysis is based on crime rates over crime counts. This decision is driven by the fact that each location within the dataset has varying population sizes. By using crime rates, which are normalized per 100,000 population, we effectively eliminate the bias that could arise from comparing crime counts across differently populated areas. This approach ensures a more accurate comparison of crime data.
+
+The analysis will be using R [@citeR] and various R packages such as "tidyverse" [@citeTidyverse], "ggplot2" [@citeGgplot2], "knitr" [@citeKnitr], "kableExtra" [@citeKableExtra], and "dplyr" [@citeDplyr], the dataset is cleaned and transformed to a table, since the year variable is in the columns, the table only displays the 2023 data for assault, break enter, homicide, robbery, shooting, and bike theft as an example. Moreover, the digits are to the 1 decimal place (see @tbl-exampleneighbourhoodcrimerates).
+
+```{r}
+#| message: false
+#| echo: false
+#| warning: false
+
+file_path <- "../Input/Data/unedited_data.csv"
+raw_data <- read_csv(file_path)
+
+
+example_data <- raw_data |> select(HOOD_ID, ASSAULT_RATE_2023, BREAKENTER_2023, HOMICIDE_RATE_2023, ROBBERY_RATE_2023, SHOOTING_RATE_2023, BIKETHEFT_RATE_2023)
+```
+
+```{r}
+#| message: false
+#| echo: false
+#| warning: false
+#| fig-pos: 'h'
+#| label: tbl-exampleneighbourhoodcrimerates
+#| tbl-cap: Sample of example Neighbourhood Crime Rates Dataset
+
+# create a table with selected columns
+example_tbl <- 
+  head(example_data) |>
+  kable(
+    col.name = c("Id", "Assault", "BreakEnter", "Homicide", "Robbery", "Shooting", "BikeTheft"),
+    digits = 1,
+    booktabs = TRUE
+  )
+
+example_tbl
+```
+
+This comprehensive dataset includes a total of nine distinct crime categories: robbery, assault, theftover, homicide, break and enter, bike theft, auto theft, break enter, and theft from motor vehicles, spanning the years 2014 to 2023. Since there are 4 types of theft, I choose the most common one to be in my analysis, i.e. bike theft. @tbl-exampleneighbourhoodcrimerates presents the initial six rows from the Neighbourhood Crime Rates Dataset.
+
+## Wexford crime data
+Given the expansive coverage of 158 neighborhoods in the dataset, the scope of this study will be concentrated on two specific neighborhoods for detailed examination. Kensington-Chinatown (HOOD_ID: 78) and Wexford/Maryvale (HOOD_ID: 119) have been strategically chosen based on their geographical differences. Kensington-Chinatown is located in downtown Toronto, while Wexford/Maryvale is in the northeastern part of the city. This geographical contrast generages the hypothesis that crime rates and trends may vary significantly between these two distinct regions.
+
+```{r}
+#| message: false
+#| echo: false
+#| warning: false
+
+crime_types <- c("ASSAULT_RATE", "ROBBERY_RATE", "HOMICIDE_RATE", "BREAKENTER_RATE", "SHOOTING_RATE", "BIKETHEFT_RATE")
+years <- 2014:2023
+
+column_names <- c("HOOD_ID")
+for (crime in crime_types) {
+  for (year in years) {
+    column_names <- c(column_names, paste(crime, year, sep = "_"))
+  }
+}
+
+cleaned_data <- raw_data |> select(all_of(column_names))
+
+selected_rows <- cleaned_data |>
+  filter(HOOD_ID == c(78, 119))
+```
+
+```{r}
+#| message: false
+#| echo: false
+#| warning: false
+#| fig-pos: 'h'
+#| label: tbl-wexfordcrimerates
+#| tbl-cap: Crime Rates by Year and Crime Type for Wexford/Maryvale
+
+wexford_data <- selected_rows |>
+  filter(HOOD_ID == c(119))
+
+wexford_rates_list <- as.list(wexford_data)
+
+wexford_rates_list[["HOOD_ID"]] <- NULL
+
+# Convert the named list to a dataframe
+wexford_data <- tibble(Rate = unname(wexford_rates_list),
+                       Crime_Year = names(wexford_rates_list))
+
+# Separate the Crime and Year into different columns
+wexford_data <- wexford_data %>%
+  separate(Crime_Year, into = c("Crime_Type", "Year"), sep = "_RATE_")
+
+# Pivot the dataframe to get the desired format
+wexford_table <- wexford_data |>
+  spread(key = Crime_Type, value = Rate)
+
+# Make sure years are treated as numbers for proper sorting
+wexford_table$Year <- as.numeric(wexford_table$Year)
+
+# Arrange the data by year
+wexford_table <- wexford_table |>
+  arrange(Year)
+
+# Calculate the average of the HOMICIDE column, excluding NA values
+average_homicide <- mean(wexford_table$HOMICIDE, na.rm = TRUE)
+
+# Replace NA values in the HOMICIDE column with the calculated average
+wexford_table <- wexford_table %>%
+  mutate(HOMICIDE = replace_na(HOMICIDE, average_homicide))
+
+# Convert list columns to standard numeric vectors
+wexford_table$HOMICIDE <- sapply(wexford_table$HOMICIDE, function(x) ifelse(is.na(x), NA, x))
+
+# Now calculate the average of the HOMICIDE column, excluding NA values
+average_homicide <- mean(wexford_table$HOMICIDE, na.rm = TRUE)
+
+# Replace NA values in the HOMICIDE column with the calculated average
+wexford_table$HOMICIDE <- ifelse(is.na(wexford_table$HOMICIDE), average_homicide, wexford_table$HOMICIDE)
+
+# Proceed with creating the table using kable
+kable_table <- kable(wexford_table, "latex", booktabs = TRUE, digits = 1, longtable = TRUE) |>
+  kable_styling(latex_options = c("repeat_header"))
+
+# Print the table
+kable_table
+```
+
+Data from the neighborhood with HOOD_ID 119 was filtered and restructured into @tbl-wexfordcrimerates, displaying years as rows and crime types as columns. Each cell indicates the crime rate for a specific year and crime type. The Homicide column's NA values were replaced with the mean rate to maintain consistency in trend analysis.
+
+This study aims to identify patterns in crime rates from 2014 to 2023, assessing whether trends are linearly increasing or exhibit fluctuations. 
+
+```{r}
+#| message: false
+#| echo: false
+#| warning: false
+#| fig-pos: 'h'
+#| label: fig-wexfordcrimerates
+#| fig-cap: Crime Rates by Year and Crime Type for Wexford/Maryvale
+
+wexford_data$Rate <- as.numeric(wexford_data$Rate)
+wexford_data$Year <- as.numeric(wexford_data$Year)
+
+wexford_data |>
+  ggplot(aes(x = Year, y = Rate, color = Crime_Type)) +
+  geom_point() +
+  geom_line()+
+  theme_minimal() +
+  labs(x = "Year", y = "Crime_rate", color = "Crime_Type") +
+  scale_color_brewer(palette = "Set1") +
+  theme(legend.position = "bottom")
+```
+
+@fig-wexfordcrimerates facilitates a comparative analysis of six distinct categories of crime: assault, bike theft, breaking and entering, homicide, robbery, and shooting. From a statistical standpoint, the following observations can be deduced: the assault category shows a volatile pattern, with a notable peak in 2015 and 2019, a subsequent decline in 2020, followed by an increase 2023. The fluctuations suggest that external factors may be influencing the incidence of assault crimes. The bike theft category exibits less variability, bike theft rates appear to maintain a relatively low and steady rate with a slight upward trend towards 2023. Then, the rate of break and entering demonstrates a general downward trend, with occasional year-over-year increases. The overall decline may reflect effective crime prevention strategies or shifts in criminal behavior. Homicide rates are considerably lower compared to other crime types and are characterized by relative stability. Notably, there are years with zero reported incidents. The trend for robbery rates declines over the period, which might suggest improved community safety. Similar to homicide, shooting incidents are less frequent, yet they display a cyclical pattern with periods of increase and decrease.
+
+## Kensington crime data
+
+```{r}
+#| message: false
+#| echo: false
+#| warning: false
+#| fig-pos: 'h'
+#| label: tbl-kensingtoncrimerates
+#| tbl-cap: Crime Rates by Year and Crime Type for Kensington-Chinatown
+
+kensington_data <- selected_rows |>
+  filter(HOOD_ID == c(78))
+
+kensington_rates_list <- as.list(kensington_data)
+
+kensington_rates_list[["HOOD_ID"]] <- NULL
+
+# Convert the named list to a dataframe
+kensington_data <- tibble(Rate = unname(kensington_rates_list),
+                       Crime_Year = names(kensington_rates_list))
+
+# Separate the Crime and Year into different columns
+kensington_data <- kensington_data %>%
+  separate(Crime_Year, into = c("Crime_Type", "Year"), sep = "_RATE_")
+
+# Pivot the dataframe to get the desired format
+kensington_table <- kensington_data |>
+  spread(key = Crime_Type, value = Rate)
+
+# Make sure years are treated as numbers for proper sorting
+kensington_table$Year <- as.numeric(kensington_table$Year)
+
+# Arrange the data by year
+kensington_table <- kensington_table |>
+  arrange(Year)
+
+# Proceed with creating the table using kable
+kensington_kable_table <- kable(kensington_table, "latex", booktabs = TRUE, digits = 1, longtable = TRUE) |>
+  kable_styling(latex_options = c("repeat_header"))
+
+# Print the table
+kensington_kable_table
+```
+The data of Kensington-Chinatown is cleaned and transformed to a table in a similar way as what we did to the Wexford data. Since there are no NA values in the Kensington-Chinatown data, we can directly restructure it to a table in the same way. Now, we are going to build the line graph as what we did to the Wexford data.
+
+```{r}
+#| message: false
+#| echo: false
+#| warning: false
+#| fig-pos: 'h'
+#| label: fig-kensingtoncrimerates
+#| fig-cap: Crime Rates by Year and Crime Type for Kensington-Chinatown
+
+kensington_data$Rate <- as.numeric(kensington_data$Rate)
+kensington_data$Year <- as.numeric(kensington_data$Year)
+
+kensington_data |>
+  ggplot(aes(x = Year, y = Rate, color = Crime_Type)) +
+  geom_point() +
+  geom_line()+
+  theme_minimal() +
+  labs(x = "Year", y = "Crime_rate", color = "Crime_Type") +
+  scale_color_brewer(palette = "Set1") +
+  theme(legend.position = "bottom")
+```
+From @fig-kensingtoncrimerates we can observe the following patterns: the most prominent trend is the assault rate, which shows a steady increase from 2014 onwards, peaking around 2019 before plateauing. The rate of break and enter fluctuates significantly, with a notable peak around 2017. This could indicate a year-specific factor that temporarily influenced the trend of this crime. Robbery rates demonstrate a general decline over the years, which could be indicative of effective policing strategies or social changes within the community. There is a sharp increase in bike theft around 2017, followed by a sharp decline. The homicide rate remains relatively flat and low in comparison to other crimes, suggesting it is less affected by the factors influencing the rates of other crime types. The shooting rate, while varying, does not exhibit any clear trend, remaining consistently low throughout the observed period.
+
+\newpage
+
+## Comparison of the two locations
+```{r}
+#| eval: true
+#| warning: false
+#| echo: false
+#| label: fig-wexfordkensingtongraphsidebyside
+#| fig-cap: "Wexford and Kensington"
+#| fig-subcap: ["Wexford","Kensington"]
+#| layout-ncol: 2
+
+wexford_data |>
+  ggplot(aes(x = Year, y = Rate, color = Crime_Type)) +
+  geom_point() +
+  geom_line()+
+  theme_minimal() +
+  labs(x = "Year", y = "Crime_rate", color = "Crime_Type") +
+  scale_color_brewer(palette = "Set1") +
+  theme(legend.position = "bottom")
+
+kensington_data |>
+  ggplot(aes(x = Year, y = Rate, color = Crime_Type)) +
+  geom_point() +
+  geom_line()+
+  theme_minimal() +
+  labs(x = "Year", y = "Crime_rate", color = "Crime_Type") +
+  scale_color_brewer(palette = "Set1") +
+  theme(legend.position = "bottom")
+```
+In comparing the two line graphs depicting crime rates for Wexford and Kensington-Chinatown, we can make the following comparative analysis: the crime rates in Wexford show variability but less pronounced peaks and troughs compared to Kensington-Chinatown. There's a notable increase in assault rates over time, with a significant drop in 2020, possibly due to external factors such as the COVID-19 pandemic.
+The Kensington-Chinatown neighborhood experiences more pronounced fluctuations, particularly with break and enter crimes peaking sharply in 2017. It also shows a upward trend in assault rates, which far exceeds those in Wexford. Assault rates in Kensington-Chinatown are consistently higher and show a steeper increase compared to Wexford, suggesting potentially different socio-economic conditions or policing issues. Both neighborhoods exhibit a spike in bike thefts at different times (Wexford in 2023 and Kensington-Chinatown in 2017), indicating that local factors may affect this type of crime at different times. Homicide rates remain low in both areas, with little fluctuation. Kensington-Chinatown shows a slightly more variable rate compared to the almost flat trend in Wexford. Robbery rates are decreasing in both neighborhoods, but the decline is more pronounced in Wexford. Shooting rates are low in both neighborhoods, with no prominent increasing or decreasing trend.
+
+The scale of crime rates is significantly different between the two neighborhoods, with Kensington-Chinatown experiencing higher rates of assault and break and enter crimes.
+The scope of the crime types is similar across both neighborhoods, but the intensity and variation of crimes are neighborhood-specific.
+
+# Discussion
+
+The investigation reveals an upward trend in the overall crime rates for both neighbourhoods, with Kensington-Chinatown showing a more noticable increase. Comparative analysis indicates that Kensington-Chinatown's crime rates are not only higher but also more volatile, suggesting the socio-economic and environmental factors may be the reason behind this phenomenom. 
+
+The analysis was constrained by the limitations of the crime data, such as potential underreporting and the absence of socio-economic variables, which may provide a more comprehensive understanding of the factors behind crime.
+
+Subsequent research could explore the reasons for the changes in crime rates from 2014 to 2023. Consideration of factors such as the area's income level, police budget, and policy changes could clarify the forces affecting crime patterns.
+
+
+\newpage
+
+# Reference

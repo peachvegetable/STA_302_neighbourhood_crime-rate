@@ -17,7 +17,10 @@ datastore_resources <- filter(resources, tolower(format) %in% c('csv',
 neighbourhood_crime_rates <- filter(datastore_resources, row_number()==1) %>% 
   get_resource()
 
+dir_path <- "Input/Data"
+file_path <- file.path(dir_path, "unedited_data.csv")
+
 write_csv(
   x = neighbourhood_crime_rates,
-  file = "neighbourhood_crime_rates.csv"
+  file = file_path
 )
