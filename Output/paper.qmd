@@ -40,7 +40,7 @@ To examine the trends of crime in Toronto, I have sourced the "Neighbourhood Cri
 
 Given the dataset's extensive scope, encompassing 158 neighborhoods, a selection approach was necessary to manage the breadth of the analysis. Therefore, a subset of locations was chosen to be analyzed. The dataset consists of 185 variables (columns) and 158 locations. For the purposes of this paper, the focus will be narrowed to the rate of six common crimes (i.e. assault, break enter, homicide, robbery, shooting and bike theft) spanned from 2014 to 2023 (not crime counts) and Hood_id. In particular, the analysis is based on crime rates over crime counts. This decision is driven by the fact that each location within the dataset has varying population sizes. By using crime rates, which are normalized per 100,000 population, we effectively eliminate the bias that could arise from comparing crime counts across differently populated areas. This approach ensures a more accurate comparison of crime data.
 
-The analysis will be using R [@citeR] and various R packages such as "tidyverse" [@citeTidyverse], "ggplot2" [@citeGgplot2], "knitr" [@citeKnitr], "kableExtra" [@citeKableExtra], and "dplyr" [@citeDplyr], the dataset is cleaned and transformed to a table, since the year variable is in the columns, the table only displays the 2023 data for assault, break enter, homicide, robbery, shooting, and bike theft as an example. Moreover, the digits are to the 1 decimal place (see @tbl-exampleneighbourhoodcrimerates).
+The analysis will be using R [@citeR] and various R packages such as "tidyverse" [@citeTidyverse], "ggplot2" [@citeGgplot2], "knitr" [@citeKnitr], "kableExtra" [@citeKableExtra], and "dplyr" [@citeDplyr], the dataset is cleaned and transformed to a table, since the year variable is in the columns, the table only displays the 2023 data for assault, break enter, homicide, robbery, shooting, and bike theft as an example see @tbl-exampleneighbourhoodcrimerates.
 
 ```{r}
 #| message: false
@@ -67,7 +67,6 @@ example_tbl <-
   head(example_data) |>
   kable(
     col.name = c("Id", "Assault", "BreakEnter", "Homicide", "Robbery", "Shooting", "BikeTheft"),
-    digits = 1,
     booktabs = TRUE
   )
 
@@ -151,7 +150,7 @@ average_homicide <- mean(wexford_table$HOMICIDE, na.rm = TRUE)
 wexford_table$HOMICIDE <- ifelse(is.na(wexford_table$HOMICIDE), average_homicide, wexford_table$HOMICIDE)
 
 # Proceed with creating the table using kable
-kable_table <- kable(wexford_table, "latex", booktabs = TRUE, digits = 1, longtable = TRUE) |>
+kable_table <- kable(wexford_table, "latex", booktabs = TRUE, longtable = TRUE) |>
   kable_styling(latex_options = c("repeat_header"))
 
 # Print the table
@@ -222,7 +221,7 @@ kensington_table <- kensington_table |>
   arrange(Year)
 
 # Proceed with creating the table using kable
-kensington_kable_table <- kable(kensington_table, "latex", booktabs = TRUE, digits = 1, longtable = TRUE) |>
+kensington_kable_table <- kable(kensington_table, "latex", booktabs = TRUE, longtable = TRUE) |>
   kable_styling(latex_options = c("repeat_header"))
 
 # Print the table
