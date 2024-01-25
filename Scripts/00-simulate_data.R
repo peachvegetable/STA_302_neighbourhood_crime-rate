@@ -24,7 +24,7 @@ simulated_data$Crime_types |> unique()
 
 # Tests
 simulated_data$Year |> min() == 2014
-simulated_data$Year |> max() == 2024
+simulated_data$Year |> max() == 2023
 simulated_data$Crime_rates |> class() == "numeric"
 setequal(unique(simulated_data$Crime_types), c("Assault", "Burglary", 
                                                "Robbery", "Theft")) == TRUE

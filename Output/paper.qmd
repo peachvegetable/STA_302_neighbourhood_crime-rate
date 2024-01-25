@@ -4,7 +4,7 @@ author: "Charles Cai"
 thanks: "Code and data are available at: https://github.com/peachvegetable/STA_302_neighbourhood_crime-rate" 
 date: "today"
 date-format: "long" 
-abstract: "This study presents an analysis of crime rates in the Wexford/Maryvale and Kensington-Chinatown neighborhoods over a ten-year period, revealing a notable increase in crime rates, especially in Kensington-Chinatown. The findings suggest that local socio-economic factors may significantly influence crime trends."
+abstract: "In this study, we analyzed crime data across two Toronto neighborhoods to identify trends from 2014 to 2023. Our findings indicate a significant rise in crime rates, with variation between the neighborhoods, particularly a sharp increase in Kensington-Chinatown. This research underscores the impact of local socio-economic factors on crime trends and highlights the necessity for community-specific strategies in crime prevention."
 format: pdf
 output: bookdown::pdf_document2
 toc: true
